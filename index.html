@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>WebVR - Aframe - VR walkthrough</title>
+    <script src="https://aframe.io/releases/0.7.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-animation-component@^4.1.2/dist/aframe-animation-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-look-at-component@0.5.1/dist/aframe-look-at-component.min.js"></script>
+    <script>
+      AFRAME.registerComponent('hotspots',{
+        init:function(){
+            this.el.addEventListener('reloadspots',function(evt){
+
+            //get the entire current spot group and scale it to 0
+            var currspotgroup=document.getElementById(evt.detail.currspots);
+            currspotgroup.setAttribute("scale","0 0 0");
+
+            //get the entire new spot group and scale it to 1
+            var newspotgroup=document.getElementById(evt.detail.newspots);
+            newspotgroup.setAttribute("scale","1 1 1");
+          });
+        }
+      });
+      AFRAME.registerComponent('spot',{
+        schema:{
+          linkto:{type:"string",default:""},
+          spotgroup:{type:"string",default:""}
+        },
+        init:function(){
+
+          //add image source of hotspot icon
+          this.el.setAttribute("src","#hotspot");
+          //make the icon look at the camera all the time
+          this.el.setAttribute("look-at","#cam");
+
+          var data=this.data;
+
+          this.el.addEventListener('click',function(){
+            //set the skybox source to the new image as per the spot
+            var sky=document.getElementById("skybox");
+            sky.setAttribute("src",data.linkto);
+
+            var spotcomp=document.getElementById("spots");
+            var currspots=this.parentElement.getAttribute("id");
+            //create event for spots component to change the spots data
+            spotcomp.emit('reloadspots',{newspots:data.spotgroup,currspots:currspots});
+          });
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <a-scene background="color: #ECECEC">
+      <a-assets>
+       <img id="point1" src="vr.jpg"/>
+        <img id="point2" src="vr2.jpg"/>
+        <img id="point3" src="vr3.jpg"/>
+
+        <img id="hotspot" src="portal.png" />
+      </a-assets>
+
+      <a-entity id="spots" hotspots>
+        <a-entity id="group-point1">
+          <a-image spot="linkto:#point2;spotgroup:group-point2" position="-6 1 0"></a-image>
+        </a-entity>
+        <a-entity id="group-point2" scale="0 0 0">
+          <a-image spot="linkto:#point1;spotgroup:group-point1" position="0 0 -1"></a-image>
+          <a-image spot="linkto:#point3;spotgroup:group-point3" position="0 5 1"></a-image>
+        </a-entity>
+        <a-entity id="group-point3" scale="0 0 0">
+          <a-image spot="linkto:#point2;spotgroup:group-point2" position="3 0 1"></a-image>
+        </a-entity>
+      </a-entity>
+
+      <a-sky id="skybox" src="#point1"></a-sky>
+
+      <a-entity id="cam" camera position="0 1.6 0" look-controls>
+        <a-entity cursor="fuse:true;fuseTimeout:2000"
+                  geometry="primitive:ring;radiusInner:0.02;radiusOuter:0.04"
+                  position="0 0 -1.8"
+                  material="shader:flat;color:#fff">
+        </a-entity>
+      </a-entity>
+
+    </a-scene>
+  </body>
+</html>
